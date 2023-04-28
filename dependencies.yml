@@ -1,0 +1,17 @@
+name: incode
+channels:
+  - conda-forge
+dependencies:
+  - python=3.8.8
+  - arrow
+  - boto3
+  - flatten_json
+  - pandas
+  - requests
+  - importlib-metadata
+  - click
+  - sqlite
+  - python-levenshtein
+  - unidecode
+  - pillow
+  - numpy
