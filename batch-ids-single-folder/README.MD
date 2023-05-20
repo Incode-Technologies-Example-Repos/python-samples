@@ -17,10 +17,15 @@ Font side documents should be suffexed with 'F' and the back side documents shou
 example:
 
 /IDS/florida001F.png
-/IDS/florida001B.png'
+
+/IDS/florida001B.png
+
 /IDS/alabama001F.png
+
 /IDS/alabama001B.png
+
 /IDS/maine002F.png
+
 /IDS/maine002B.png
 
 ## Usage
