@@ -14,7 +14,7 @@ You will need a directory of ID documents.  The IDs must follow a strict naming 
 
 Font side documents should be suffexed with 'F' and the back side documents should be suffexed with a 'B'.
 
-example:
+__Example:__
 
 /IDS/florida001F.png
 
