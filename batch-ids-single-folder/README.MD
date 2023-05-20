@@ -2,9 +2,9 @@
 
 # Batch process two sided ID documents within a folder
 
-This python script performs ID validation in a batch process using Incode's API.  The challege with batch processing is usually organizing the data which needs to be processed.  This script iterates a single directory of ID images to find front and back sides of a document and then submits them to Incode Omni for ID validation + Goverment validation.  
+This python script performs ID validation in a batch process using Incode's API.  This script iterates a single directory of ID images to find front and back sides of a document and then submits them to Incode Omni for ID validation + Goverment validation.  
 
-When batch processing score results will be written and saved to an excel file.
+Batch processing score results will be written to an excel file when processing is done.
 
 ## Prerequisites
 
