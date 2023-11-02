@@ -1,0 +1,5 @@
+curlify
+requests
+Pillow
+prettyprinter
+python-dotenv
