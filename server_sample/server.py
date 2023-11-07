@@ -1,5 +1,6 @@
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import logging, ngrok, os
+from http.server import HTTPServer, BaseHTTPRequestHandler, SimpleHTTPRequestHandler
+import logging, os
+import json
 from Session import Session as IncodeSession
 from dotenv import load_dotenv
 load_dotenv("sample.env") # Update path to .env once you fill in the environment details and change the filename to .env
@@ -28,7 +29,7 @@ DOCUMENTS = {  # Optional
     "front_id": FRONT_ID_PATH,
     "back_id": BACK_ID_PATH
 }
-
+        
 
 class RoutingHandler(BaseHTTPRequestHandler):
 
@@ -47,27 +48,39 @@ class RoutingHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/start":
             self.send_data(self.omni_start())
-        if self.path == "/onboarding-url":
+        elif self.path == "/onboarding-url":
             self.send_data(self.omni_get_onboarding_url())
-        if self.path == "/onboarding-url-without-api-key":
+        elif self.path == "/onboarding-url-without-api-key":
             self.send_data(self.omni_get_onboarding_url_without_api_key())
-        if self.path == "/executive-token":
+        elif self.path == "/executive-token":
             if ADMIN_EMAIL != 'None' and ADMIN_PASSWORD != 'None' and ADMIN_EMAIL and ADMIN_PASSWORD:
                 self.send_data(self.omni_get_executive_token())
             else:
-                self.send_data("Please make sure you added your admin email and password to the environment variables.")
+                self.send_data("Please make sure you added your admin email and password to the environment variables. These are the login credentials located in your delivery document.")
         else:
             self.send_data("Hello, this route does not exist :-)")
 
 
+    def do_OPTIONS(self):
+        self.do_GET()
+
+
     def send_data(self, msg):
         """Sends the data"""
-        body = bytes(str(msg), "utf-8")
+        body = json.dumps(msg).encode('utf-8')
         self.protocol_version = "HTTP/1.1"
         self.send_response(200)
-        self.send_header("Content-Length", len(body))
-        self.end_headers()
+        self.send_all_headers()
         self.wfile.write(body)
+
+
+    def send_all_headers(self):
+        self.send_header("Content-Type", "application/json")
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, ngrok-skip-browser-warning")
+        self.send_header("Access-Control-Allow-Credentials", "true")
+        super().end_headers()
         
 
     def omni_start(self):
@@ -82,10 +95,8 @@ class RoutingHandler(BaseHTTPRequestHandler):
         incodeSession = self.initializeIncodeSession()
         startResponse = incodeSession.start()
         onboardingUrl = incodeSession.generate_onboarding_link(clientId=CLIENT_ID)
-        fullResult = {
-            "startResponse" : startResponse,
-            "onboardingUrl" : onboardingUrl
-        }
+        fullResult = startResponse
+        fullResult["url"] = onboardingUrl["url"]
         return fullResult
     
 
@@ -97,10 +108,8 @@ class RoutingHandler(BaseHTTPRequestHandler):
         r = incodeSession.s.get(f"{incodeSession.base_url}0/omni/onboarding-url?clientId={CLIENT_ID}") # Using /0/ in the route to indicate that there is no API key and the token should be used for authentication
         response = r.json()
         incodeSession.api_call_dict["generate_onboarding_link"] = r.request
-        fullResult = {
-            "startResponse" : startResponse,
-            "onboardingUrl" : response
-        }
+        fullResult = startResponse
+        fullResult["url"] = response["url"]
         return fullResult
     
 
@@ -113,5 +122,4 @@ class RoutingHandler(BaseHTTPRequestHandler):
 
 logging.basicConfig(level=logging.INFO)
 server = HTTPServer(("localhost", int(HTTP_PORT)), RoutingHandler)
-listener = ngrok.connect(f"localhost:{HTTP_PORT}", authtoken_from_env=True)
 server.serve_forever()
