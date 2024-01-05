@@ -6,14 +6,16 @@ import requests
 
 class Session:
 
-    def __init__(self, base_url, api_key, flow_id) -> None:
+    def __init__(self, base_url, api_key, flow_id, executive_token=None) -> None:
         self.base_url = base_url
         self.api_key = api_key
         self.flow_id = flow_id
         self.interview_id = ""
+        self.executive_token = executive_token
         self.session = requests.Session()
         self.session.stream = False
         self.session.headers.update({"x-api-key": self.api_key, "api-version": "1.0"})
+        self.api_call_dict = {}
 
     def start(self, redirection_url = None):
         """https://docs.incode.com/docs/omni-api/api/onboarding#start-onboarding"""
@@ -44,3 +46,26 @@ class Session:
         r = self.session.get(f"{self.base_url}/0/omni/onboarding-url?clientId={clientId}")
         response = r.json()
         return response
+    
+    def get_scores(self, useExecutiveToken=True, manualInterviewId=None):
+        """https://docs.incode.com/docs/omni-api/api/onboarding#fetch-scores"""
+        if useExecutiveToken and manualInterviewId:
+            self.interview_id = manualInterviewId
+            self.session.headers.update({"X-Incode-Hardware-Id": self.executive_token})
+        r = self.session.get(f"{self.base_url}/omni/get/score?id={self.interview_id}")
+        response = r.json()
+        self.session_scores = response
+        self.api_call_dict["get_scores"] = r.request
+        return response
+    
+    def process_approve(self,useExecutiveToken=True, manualInterviewId=None):
+        """https://docs.incode.com/docs/omni-api/api/onboarding#approve-customer"""
+        if useExecutiveToken and manualInterviewId:
+            self.interview_id = manualInterviewId
+            self.session.headers.update({"X-Incode-Hardware-Id": self.executive_token})
+        r = self.session.post(
+            f"{self.base_url}/omni/process/approve?interviewId={self.interview_id}",
+            json={},
+        )
+        self.api_call_dict["process_approve"] = r.request
+        return r.json()

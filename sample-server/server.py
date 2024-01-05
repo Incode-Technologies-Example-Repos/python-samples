@@ -11,6 +11,7 @@ API_URL = os.getenv("API_URL")
 API_KEY = os.getenv("API_KEY")
 CLIENT_ID = os.getenv("CLIENT_ID")
 FLOW_ID = os.getenv("FLOW_ID")
+ADMIN_TOKEN = os.getenv("ADMIN_TOKEN")
 
 
 class RoutingHandler(BaseHTTPRequestHandler):
@@ -20,7 +21,8 @@ class RoutingHandler(BaseHTTPRequestHandler):
         incodeSession = IncodeSession(
             API_URL,
             API_KEY,
-            flow_id = FLOW_ID
+            flow_id = FLOW_ID,
+            executive_token=ADMIN_TOKEN
         )
         return incodeSession
     
@@ -36,6 +38,8 @@ class RoutingHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path.startswith("/webhook"):
             self.send_data(self.webhook())
+        elif self.path.startswith("/approve"):
+            self.send_data(self.approve())
         else:
             self.send_error(404, "Cannot POST " + self.path)
 
@@ -84,12 +88,57 @@ class RoutingHandler(BaseHTTPRequestHandler):
     
     
     def webhook(self):
-        """Starts a session and generates an onboarding URL"""
+        """Webhook to receive onboarding status, configure it in"""
+        """incode dasboard > settings > webhook > onboarding status"""
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length)
         json_data = json.loads(post_data.decode('utf-8'))
         print("Received JSON data:", json_data)
         return json_data
+    
+    def approve(self):
+        """Webhook to receive onboarding status, configure it in"""
+        """incode dasboard > settings > webhook > onboarding status"""
+        """This endpoint will auto-approve(create an identity) for"""
+        """any sessions that PASS."""
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+        json_data = json.loads(post_data.decode('utf-8'))
+        
+        if json_data["onboardingStatus"]=="ONBOARDING_FINISHED":
+            incodeSession = self.initializeIncodeSession()
+            onboarding_score=incodeSession.get_scores(manualInterviewId=json_data["interviewId"])
+            if onboarding_score["overall"]["status"]=="OK":
+                identity_data=incodeSession.process_approve(manualInterviewId=json_data["interviewId"])
+                response = {
+                    "success":True,
+                    "data": identity_data
+                }
+                # This would return something like this:
+                # {
+                #   success: true,
+                #   data: {
+                #     success: true,
+                #     uuid: '6595c84ce69d469f69ad39fb',
+                #     token: 'eyJhbGciOiJ4UzI1NiJ9.eyJleHRlcm5hbFVzZXJJZCI6IjY1OTVjODRjZTY5ZDk2OWY2OWF33kMjlmYiIsInJvbGUiOiJBQ0NFU5MiLCJrZXlSZWYiOiI2MmZlNjQ3ZTJjODJlOTVhZDNhZTRjMzkiLCJleHAiOjE3MTIxOTExMDksImlhdCI6MTcwNDMyODcwOX0.fbhlcTQrp-h-spgxKU2J7wpEBN4I4iOYG5CBwuQKPLQ72',
+                #     totalScore: 'OK',
+                #     existingCustomer: false
+                #   }
+                # }
+                # UUID: You can save the generated uuid of your user to link your user with our systems.
+                # Token: Is long lived and could be used to do calls in the name of the user if needed.
+                # Existing Customer: Will return true in case the user was already in the database, in such case we are returning the UUID of the already existing user.
+                
+                return response
+            else:
+                response = {
+                    "success": False,
+                    "error": "Session didn't PASS, identity was not created",
+                }
+                return response
+        else:
+            print("Received JSON data:", json_data)
+            return json_data
 
 
 logging.basicConfig(level=logging.INFO)
