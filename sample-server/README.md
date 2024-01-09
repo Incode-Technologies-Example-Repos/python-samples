@@ -8,9 +8,13 @@
 
 It can receive the optional query parameter `redirectUrl` to set where to redirect the user at the end of the flow.
 
+- POST `/auth`: Receives the information about a faceMatch attempt and verifies if it was correct and has not been tampered.
+
 - POST `/webhook`: Example webhook that reads the json data and return it back a response, from here you could fetch scores or OCR data when the status is ONBOARDING_FINISHED
 
 - POST `/approve`: Example webhook that reads the json data and if the status is ONBOARDING_FINISHED goes ahead and creates the identity using the `/omni/process/approve` endpoint.
+
+
 
 ## Secure Credential Handling
 We highly recommend to follow the 0 rule for your implementations, where all sensitive calls to incode's endpoints are done in the backend, keeping your apikey protected and just returning a `token` with the user session to the frontend.
@@ -57,10 +61,29 @@ ngrok http 3000
 
 Open the `Forwarding` adress in a web browser. The URL should look similar to this: `https://466c-47-152-68-211.ngrok-free.app`.
 
+## GET Endpoints
 Now you should be able to visit the following routes to receive the associated payloads:
 1. `https://yourforwardingurl.app/start`
 2. `https://yourforwardingurl.app/onboarding-url`
 3. `https://yourforwardingurl.app/onboarding-url?redirectionUrl=https%3A%2F%2Fexample.com%2F`
+
+## Post Endpoints
+
+### Auth
+Receives the information about a faceMatch attempt and verifies if it was correct and has not been tampered.
+
+All the parameters needed come as the result of execution of the [Render Login](https://docs.incode.com/docs/web/integration-guide/sdk-methods#renderlogin) component,
+you can see a full example of it's usage in [Face Login Sample](https://github.com/Incode-Technologies-Example-Repos/javascript-samples/tree/main/face-login)
+
+```bash
+curl --location 'https://yourforwardingurl.app/auth' \
+--header 'Content-Type: application/json' \
+--data '{
+    "transactionId": "Transaction Id obtained at face login",
+    "token": "Token obtained at face login ",
+    "interviewToken": "Interview token obtained at face login",
+}'
+```
 
 ## Webhooks
 
