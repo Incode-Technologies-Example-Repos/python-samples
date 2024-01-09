@@ -40,6 +40,8 @@ class RoutingHandler(BaseHTTPRequestHandler):
             self.send_data(self.webhook())
         elif self.path.startswith("/approve"):
             self.send_data(self.approve())
+        elif self.path.startswith("/auth"):
+            self.send_data(self.auth_attempt_verify())
         else:
             self.send_error(404, "Cannot POST " + self.path)
 
@@ -139,6 +141,15 @@ class RoutingHandler(BaseHTTPRequestHandler):
         else:
             print("Received JSON data:", json_data)
             return json_data
+    
+    def auth_attempt_verify(self):
+        """Verify auth attempt"""
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+        json_data = json.loads(post_data.decode('utf-8'))
+        incodeSession = self.initializeIncodeSession()
+        authResponse = incodeSession.auth_attempt_verify(json_data['transactionId'],json_data['token'],json_data['interviewToken'])
+        return authResponse
 
 
 logging.basicConfig(level=logging.INFO)
