@@ -69,3 +69,16 @@ class Session:
         )
         self.api_call_dict["process_approve"] = r.request
         return r.json()
+    
+    def auth_attempt_verify(self, transactionId, token, interviewToken):
+        params = {
+            "transactionId": transactionId,
+            "token": token,
+            "interviewToken": interviewToken
+        }
+        r = self.session.post(
+            f"{self.base_url}/omni/auth-attempt/verify?interviewId={self.interview_id}",
+            json=params,
+        )
+        self.api_call_dict["auth_attemp_verify"] = r.request
+        return r.json()
