@@ -77,7 +77,7 @@ class Session:
             "interviewToken": interviewToken
         }
         r = self.session.post(
-            f"{self.base_url}/omni/auth-attempt/verify?interviewId={self.interview_id}",
+            f"{self.base_url}/omni/auth-attempt/verify",
             json=params,
         )
         self.api_call_dict["auth_attemp_verify"] = r.request
