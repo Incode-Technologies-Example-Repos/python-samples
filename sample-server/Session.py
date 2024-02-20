@@ -17,13 +17,16 @@ class Session:
         self.session.headers.update({"x-api-key": self.api_key, "api-version": "1.0"})
         self.api_call_dict = {}
 
-    def start(self, redirection_url = None):
+    def start(self, redirection_url = None, external_customer_id = None):
         """https://docs.incode.com/docs/omni-api/api/onboarding#start-onboarding"""
         
         params = {"countryCode": "ALL", "configurationId": self.flow_id, "language": "en-US"}
 
         if redirection_url:
             params['redirectionUrl'] = redirection_url
+        
+        if external_customer_id:
+            params['externalCustomerId'] = external_customer_id
         
         r = self.session.post(
             self.base_url + "/omni/start",

@@ -73,16 +73,18 @@ class RoutingHandler(BaseHTTPRequestHandler):
     def omni_start(self):
         """Starts a new session"""
         incodeSession = self.initializeIncodeSession()
+        # call session start with the optional redirection_url or external_customer_id of needed
+        # startResponse = incodeSession.start(redirection_url='https://example.com?custom_parameter=some+value',external_customer_id='the id of the customer in your system')
         startResponse = incodeSession.start()
         return startResponse
 
 
     def omni_get_onboarding_url(self):
         """Starts a session and generates an onboarding URL"""
-        query_components = parse_qs(urlparse(self.path).query)
-        redirection_url = query_components.get('redirectionUrl', [''])[0]
         incodeSession = self.initializeIncodeSession()
-        startResponse = incodeSession.start(redirection_url)
+        # call session start with the optional redirection_url or external_customer_id of needed
+        # startResponse = incodeSession.start(redirection_url='https://example.com?custom_parameter=some+value',external_customer_id='the id of the customer in your system')
+        startResponse = incodeSession.start()
         onboardingUrl = incodeSession.generate_onboarding_link(clientId=CLIENT_ID)
         fullResult = startResponse
         fullResult["url"] = onboardingUrl["url"]
